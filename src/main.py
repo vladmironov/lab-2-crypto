@@ -10,6 +10,7 @@ from metrics import psnr, ssim, change, lsb_p1, chi2, save_histogram, save_diff_
 import csv
 
 os.makedirs("results", exist_ok=True)
+os.makedirs("crypt", exist_ok=True)
 
 pw = b"myPassword"
 key = hashlib.sha256(pw).digest()[:16]
@@ -33,7 +34,7 @@ for i in range(bp.size):
     fp[i] = op.bits(int(bp[i]))
 
 spa = fp.reshape(img.shape)
-Image.fromarray(spa).save("stego_plain.png")
+Image.fromarray(spa).save("crypt/stego_plain.png")
 
 ct, nonce = aes_ctr_encrypt(msg, key)
 pe = len(ct).to_bytes(4, "big") + nonce + ct
@@ -46,7 +47,7 @@ for i in range(be.size):
     fe[i] = op.bits(int(be[i]))
 
 sea = fe.reshape(img.shape)
-Image.fromarray(sea).save("stego_enc.png")
+Image.fromarray(sea).save("crypt/stego_enc.png")
 
 sd = int.from_bytes(hashlib.sha256(pw).digest()[:8], "big")
 ix = np.random.default_rng(sd).permutation(fc.size)
@@ -58,7 +59,7 @@ for i in range(be.size):
     fr[ix[i]] = op.bits(int(be[i]))
 
 sra = fr.reshape(img.shape)
-Image.fromarray(sra).save("stego_rnd.png")
+Image.fromarray(sra).save("crypt/stego_rnd.png")
 
 ft = spa.reshape(-1)
 ln = int.from_bytes(np.packbits(ft[:32] & 1).tobytes(), "big")
@@ -112,9 +113,9 @@ with open("results/metrics.csv", "w", newline="", encoding="utf-8-sig") as f:
     w.writerow(["Cover", "-", "-", "0", round(c1, 4), round(cx2, 3), round(cp, 4)])
 
     var = [
-        ("Plain LSB", spa, "stego_plain.png"),
-        ("Encrypted LSB", sea, "stego_enc.png"),
-        ("Random LSB", sra, "stego_rnd.png")
+        ("Plain LSB", spa, "crypt/stego_plain.png"),
+        ("Encrypted LSB", sea, "crypt/stego_enc.png"),
+        ("Random LSB", sra, "crypt/stego_rnd.png")
     ]
 
     for n, sa, ip in var:

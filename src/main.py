@@ -14,7 +14,7 @@ os.makedirs("crypt", exist_ok=True)
 
 pw = b"myPassword"
 key = hashlib.sha256(pw).digest()[:16]
-msg = b"Hello world"
+msg = b"Hello world" * 1000
 
 img = np.array(Image.open("img/gradient.png").convert("RGB"))
 cb = img.tobytes()
@@ -104,7 +104,7 @@ for n, sa, ip in var:
 
 '''
 
-with open("results/metrics.csv", "w", newline="", encoding="utf-8-sig") as f:
+with open("results/metrics_large.csv", "w", newline="", encoding="utf-8-sig") as f:
     w = csv.writer(f, delimiter=';')
     w.writerow(["Вариант", "PSNR", "SSIM", "Изм.", "P(LSB=1)", "Chi2", "p-value"])
 

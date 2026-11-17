@@ -7,6 +7,8 @@ from aes import aes_ctr_encrypt, aes_ctr_decrypt
 from lsb import LSB
 from metrics import psnr, ssim, change, lsb_p1, chi2, save_histogram, save_diff_map
 
+import csv
+
 os.makedirs("results", exist_ok=True)
 
 pw = b"myPassword"
@@ -74,10 +76,7 @@ pl = np.packbits(ft[ix[:(4 + 8 + ln) * 8]] & 1).tobytes()
 nx, cx = pl[4:12], pl[12:]
 xr = aes_ctr_decrypt(cx, key, nx)
 
-print("\nМетрики")
-print("Вариант\t|\tPSNR\t|\tSSIM\t|\tИзм.\t|\tP(LSB=1)\t|\tChi2\t|\tp-value")
-print("-" * 70)
-
+'''
 c1 = lsb_p1(cb)
 cx2, cp = chi2(cb)
 print(f"Cover\t|\t-\t|\t-\t|\t0\t|\t{round(c1, 4)}\t|\t{round(cx2, 3)}\t|\t{round(cp, 4)}")
@@ -101,3 +100,33 @@ for n, sa, ip in var:
     if n == "Plain LSB":
         save_diff_map(img, sa, "results/difference.png")
         save_histogram(cb, sb, "results/histogram.png")
+
+'''
+
+with open("results/metrics.csv", "w", newline="", encoding="utf-8-sig") as f:
+    w = csv.writer(f, delimiter=';')
+    w.writerow(["Вариант", "PSNR", "SSIM", "Изм.", "P(LSB=1)", "Chi2", "p-value"])
+
+    c1 = lsb_p1(cb)
+    cx2, cp = chi2(cb)
+    w.writerow(["Cover", "-", "-", "0", round(c1, 4), round(cx2, 3), round(cp, 4)])
+
+    var = [
+        ("Plain LSB", spa, "stego_plain.png"),
+        ("Encrypted LSB", sea, "stego_enc.png"),
+        ("Random LSB", sra, "stego_rnd.png")
+    ]
+
+    for n, sa, ip in var:
+        sb = sa.tobytes()
+        p = psnr(img, sa)
+        s = ssim(img, sa)
+        _, ch_r = change(cb, sb)
+        l_p1 = lsb_p1(sb)
+        x2, pv = chi2(sb)
+        
+        w.writerow([n, round(p, 2), round(s, 4), round(ch_r, 4), round(l_p1, 4), round(x2, 3), round(pv, 4)])
+        
+        if n == "Plain LSB":
+            save_diff_map(img, sa, "results/difference.png")
+            save_histogram(cb, sb, "results/histogram.png")

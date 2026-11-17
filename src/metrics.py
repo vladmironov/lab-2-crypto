@@ -1,7 +1,8 @@
 import numpy as np
-from scipy.stats import chi2
+from scipy.stats import chi2 as chi2_ref
 from skimage.metrics import structural_similarity
 import matplotlib.pyplot as plt
+from PIL import Image
 
 def psnr(cv, st):
     mse = np.mean((cv.astype(float) - st.astype(float)) ** 2)
@@ -25,7 +26,7 @@ def chi2(data_bytes):
     exp = counts.mean(axis=1)
     mask = exp > 0
     x2 = float(np.sum((counts[mask, 0] - exp[mask])**2 / exp[mask]))
-    p_val = float(1 - chi2.cdf(x2, df=127))
+    p_val = float(1 - chi2_ref.cdf(x2, df=127))
     return x2, p_val
 
 def save_histogram(cover_bytes, stego_bytes, filename):
@@ -39,4 +40,4 @@ def save_histogram(cover_bytes, stego_bytes, filename):
 def save_diff_map(cover_arr, stego_arr, filename):
     diff = np.abs(cover_arr.astype(np.int16) - stego_arr.astype(np.int16))
     vis = np.clip(diff * 20, 0, 255).astype(np.uint8)
-    plt.imsave(filename, vis)
+    Image.fromarray(vis).save(filename)

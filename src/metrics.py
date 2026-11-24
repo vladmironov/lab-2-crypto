@@ -22,12 +22,25 @@ def lsb_p1(data_bytes):
 
 def chi2(data_bytes):
     arr = np.frombuffer(data_bytes, dtype=np.uint8)
-    counts = np.bincount(arr, minlength=256).reshape(128, 2)
-    exp = counts.mean(axis=1)
-    mask = exp > 0
-    x2 = float(np.sum((counts[mask, 0] - exp[mask])**2 / exp[mask]))
-    p_val = float(1 - chi2_ref.cdf(x2, df=127))
-    return x2, p_val
+    counts = np.bincount(arr, minlength=256).astype(np.float64)
+    p = counts.reshape(128, 2)
+
+    chi_2 = 0.0
+    dof = 0
+    
+    for i in range(128):
+        tot = p[i, 0] + p[i, 1]
+        if tot > 0:
+            e = tot / 2.0
+            chi_2 += ((p[i, 0] - e) ** 2 / e) + ((p[i, 1] - e) ** 2 / e)
+            dof += 1
+
+    if (dof > 0):
+        p_val = float(chi2_ref.sf(chi_2, dof))
+    else:
+        p_val = 1.0
+    
+    return chi_2, p_val, dof
 
 def save_histogram(cover_bytes, stego_bytes, filename):
     plt.figure(figsize=(10, 4))
